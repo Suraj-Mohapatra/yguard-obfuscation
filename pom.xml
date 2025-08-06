@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.uglyeagle</groupId>
+    <artifactId>yguard-obfuscation</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+    <name>yguard-obfuscation</name>
+    <url>http://maven.apache.org</url>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <mainClass>com.uglyeagle.Main</mainClass>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.yworks</groupId>
+            <artifactId>yguard</artifactId>
+            <version>4.1.1</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+        
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.14.0</version>
+                <configuration>
+                    <release>17</release>
+                    <fork>true</fork>
+                </configuration>
+            </plugin>
+            
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.4.2</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>${mainClass}</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            
+<!--            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>${mainClass}</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>-->
+            
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.5.0</version>
+                <configuration>
+                    <mainClass>${mainClass}</mainClass>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <id>obfuscate</id>
+                        <configuration>
+                            <!--replace <target> with <tasks> if using maven-antrun-plugin version before 3.1.0-->
+                            <target>   
+                                <property
+                                    name="project.jar"
+                                    value="${project.build.directory}/${project.build.finalName}.jar"/>
+                                <property
+                                    name="project.jar.unobf"
+                                    value="${project.build.directory}/${project.build.finalName}_unobf.jar"/>
+                                <move
+                                    file="${project.jar}"
+                                    tofile="${project.jar.unobf}"
+                                    verbose="true"/>
+
+                                <property
+                                    name="runtime_classpath"
+                                    refid="maven.runtime.classpath"/>
+                                <taskdef
+                                    name="yguard"
+                                    classname="com.yworks.yguard.YGuardTask"
+                                    classpath="${runtime_classpath}"/>
+                                <yguard>
+                                    <inoutpair in="${project.jar.unobf}" out="${project.jar}" />
+
+                                    <rename logfile="${project.build.directory}/${project.build.finalName}_renamelog.xml">
+                                        <keep>
+                                            <method name="void main(java.lang.String[])" class="${mainClass}"/>
+                                        </keep>
+                                    </rename>
+                                </yguard>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            
+        </plugins>
+        <!-- <finalName>yguard-obfuscation</finalName> -->
+    </build>
+</project>
